@@ -1,0 +1,4 @@
+environment = "fixture.dme"
+header_path = "../../../include/spacelizard.dm"
+[passes]
+ci_extra = [["MVP_EXTRA"]]

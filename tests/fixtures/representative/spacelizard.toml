@@ -1,0 +1,2 @@
+environment = "fixture.dme"
+header_path = "../../../include/spacelizard.dm"

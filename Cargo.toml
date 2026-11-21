@@ -1,0 +1,21 @@
+[workspace]
+members = ["."]
+resolver = "3"
+
+[package]
+name = "spacelizard"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+dreammaker = { git = "https://github.com/SpaceManiac/SpacemanDMM", tag = "suite-1.12" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "1.1"
+
+[profile.release]
+lto = "thin"
+strip = true
