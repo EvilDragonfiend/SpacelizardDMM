@@ -9,19 +9,24 @@ jobs:
     strategy:
       matrix:
         include:
+          # musl links statically, so the Linux binary does not depend on the
+          # consumer runner's glibc version.
           - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
             source: spacelizard
             asset: spacelizard-linux-x64
           - os: windows-latest
+            target: x86_64-pc-windows-msvc
             source: spacelizard.exe
             asset: spacelizard-win-x64.exe
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - run: cargo build --locked --release
+      - run: rustup target add ${{ matrix.target }}
+      - run: cargo build --locked --release --target ${{ matrix.target }}
       - shell: pwsh
         run: |
-          Copy-Item target/release/${{ matrix.source }} ${{ matrix.asset }}
+          Copy-Item target/${{ matrix.target }}/release/${{ matrix.source }} ${{ matrix.asset }}
           $hash = (Get-FileHash -Algorithm SHA256 ${{ matrix.asset }}).Hash.ToLowerInvariant()
           "$hash  ${{ matrix.asset }}" | Set-Content -Encoding ascii ${{ matrix.asset }}.sha256
       - uses: actions/upload-artifact@v4
@@ -30,8 +35,22 @@ jobs:
           path: |
             ${{ matrix.asset }}
             ${{ matrix.asset }}.sha256
-  publish:
+  smoke:
     needs: build
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: spacelizard-linux-x64
+      - run: |
+          sha256sum -c spacelizard-linux-x64.sha256
+          chmod +x spacelizard-linux-x64
+          ./spacelizard-linux-x64 --version
+  publish:
+    needs: [build, smoke]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
